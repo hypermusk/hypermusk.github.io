@@ -1,0 +1,228 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+ 
+ <title>input, process, output</title>
+ <link href="http://sunfmin.com/atom.xml" rel="self"/>
+ <link href="http://sunfmin.com/"/>
+ <updated>2013-09-27T13:24:10+08:00</updated>
+ <id>http://sunfmin.com/</id>
+ <author>
+   <name>Felix Sun</name>
+   <email>sunfmin@gmail.com</email>
+ </author>
+
+ 
+ <entry>
+   <title>Todo Lists App</title>
+   <link href="http://sunfmin.com/2013/09/27/todo-lists-app.html"/>
+   <updated>2013-09-27T00:00:00+08:00</updated>
+   <id>http://sunfmin.com/2013/09/27/todo-lists-app</id>
+   <content type="html">&lt;p&gt;Here I'll describe the basic requirements of this app.&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;You can create a Todo List&lt;/li&gt;
+&lt;li&gt;You can create a Todo item inside one of the lists&lt;/li&gt;
+&lt;li&gt;Be able to check the Todo item to mark it finish&lt;/li&gt;
+&lt;li&gt;Be able to mark the finished item to send it back&lt;/li&gt;
+&lt;/ul&gt;
+
+
+&lt;p&gt;From these requirements, I created the Go language api definition with in these directory structure:&lt;/p&gt;
+
+&lt;p&gt; &lt;img src=&quot;/images/todo-lists-app/api.png&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;the &lt;code&gt;api.go&lt;/code&gt; file will look like this:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;package todoapi
+
+type TodoList struct {
+    Id   string
+    Name string
+}
+
+type TodoItem struct {
+    Id      string
+    ListId  string
+    Content string
+    Done    bool
+}
+
+type AppService interface {
+    GetUserService(email string, password string) (service UserService, err error)
+}
+
+type UserService interface {
+    GetTodoLists() (list []*TodoList, err error)
+    GetTodoItems(listId string) (list []*TodoItem, err error)
+    PutTodoList(name string) (err error)
+    CreateTodo(listId string, content string) (err error)
+    DoneTodo(todoItemId string) (err error)
+    UndoneTodo(todoItemId string) (err error)
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Which you can see it's simple Go structs and interfaces. But without logic implementations. Because we want to define our system API interfaces, this file will give the user of the API enough information for what you can do with the API.&lt;/p&gt;
+
+&lt;p&gt;Take &lt;code&gt;GetTodoLists&lt;/code&gt; for example, client side could use &lt;code&gt;email&lt;/code&gt; and &lt;code&gt;password&lt;/code&gt; to get a &lt;code&gt;UserService&lt;/code&gt;, Which is a way of authentication, that invalid email with password combination can't get &lt;code&gt;UserService&lt;/code&gt;, So there is no way to invoke the &lt;code&gt;GetTodoLists&lt;/code&gt; api method.&lt;/p&gt;
+
+&lt;p&gt;And the &lt;code&gt;GetTodoLists&lt;/code&gt; describe clearly that it takes no arguments, But could return a list of &lt;code&gt;TodoList&lt;/code&gt;, the &lt;code&gt;TodoList&lt;/code&gt; struct includes &lt;code&gt;Name&lt;/code&gt; and &lt;code&gt;Id&lt;/code&gt; properties.&lt;/p&gt;
+
+&lt;p&gt;If I want to invoke the API with JavaScript, I will imagine It would be nice If I can do:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;userservice.GetTodoLists(function(list, err){
+    for(var i=0; i&amp;lt;list.length; i++){
+                console.log(list[i].Name)
+            }
+});
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Because the &lt;code&gt;GetTodoLists&lt;/code&gt; definition have two return values, &lt;code&gt;list&lt;/code&gt; and &lt;code&gt;err&lt;/code&gt;, So we can see the JavaScript callback that have two arguments. that mapping directly to the Go return values.&lt;/p&gt;
+
+&lt;p&gt;The &lt;code&gt;hypermusk&lt;/code&gt; command that could generate javascript libraries that can do exactly that.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;hypermusk -pkg=github.com/hypermusk/todoapp/todoapi -lang=javascript -outdir=./web
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The &lt;code&gt;-pkg&lt;/code&gt; passed in the Go package of the API definition, &lt;code&gt;-lang&lt;/code&gt; tells it you want to generate client side library to use to call the API remotely by using JavaScript. and the &lt;code&gt;-outdir&lt;/code&gt; will tell it where to generate the file.&lt;/p&gt;
+
+&lt;p&gt;So If I ask you how to call the method &lt;code&gt;CreateTodo&lt;/code&gt; in JavaScript?&lt;/p&gt;
+
+&lt;p&gt;The answer would be:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;userservice.CreateTodo(&quot;1&quot;, &quot;new todo&quot;, function(err){
+    console.log(err);
+})
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;And to call the API you defined in Go in another language like Objective C, or Java is as easy as do it in JavaScript. But following the language's idioms.&lt;/p&gt;
+
+&lt;h2&gt;The server side implementation&lt;/h2&gt;
+
+&lt;p&gt;But If you really call the API with JavaScript, It won't do anything, Because we only defined the interfaces, didn't do any implementation yet.&lt;/p&gt;
+
+&lt;p&gt;The implementation of the server side API must be in Go, and it will import the api package to make sure the implementation is following the definition exactly.&lt;/p&gt;
+
+&lt;p&gt;First, we will use the &lt;code&gt;hypermusk&lt;/code&gt; tool again to generate the glue code to expose those API definition to the outside world through json (at the current stage, we only support expose json through http).&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;hypermusk -pkg=github.com/hypermusk/todoapp/todoapi -impl=github.com/hypermusk/todoapp/server -lang=server -outdir=./server
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;We can see it still uses the &lt;code&gt;todoapi&lt;/code&gt; package, because that's the specification of the app. But it adds another argument &lt;code&gt;-impl&lt;/code&gt;, Which will hook up the manually implemented package &lt;code&gt;github.com/hypermusk/todoapp/server&lt;/code&gt; with the generated glue code. We will write the implementation like this:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;type AppServiceImpl struct {
+}
+
+type UserServiceImpl struct {
+}
+
+func (a *AppServiceImpl) GetUserService(email string, password string) (service todoapi.UserService, err error) {
+    if email != &quot;admin@example.com&quot; &amp;amp;&amp;amp; password != &quot;nimda&quot; {
+        err = errors.New(&quot;wrong credentials&quot;)
+        return
+    }
+    service = new(UserServiceImpl)
+    return
+}
+
+func (u *UserServiceImpl) GetTodoLists() (list []*todoapi.TodoList, err error) {
+    return
+}
+
+func (u *UserServiceImpl) GetTodoItems(listId string) (list []*todoapi.TodoItem, err error) {
+    return
+}
+
+func (u *UserServiceImpl) PutTodoList(name string) (err error) {
+    return
+}
+
+func (u *UserServiceImpl) CreateTodo(listId string, name string) (err error) {
+    return
+}
+
+func (u *UserServiceImpl) DoneTodo(todoId string) (err error) {
+    return
+}
+
+func (u *UserServiceImpl) UndoneTodo(todoId string) (err error) {
+    return
+}
+
+var DefaultAppService = new(AppServiceImpl)
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The last variable &lt;code&gt;DefaultAppService&lt;/code&gt; is the secret to hook up the generated code with our API implementation. Since we defined a &lt;code&gt;AppService&lt;/code&gt; interface that no other methods returns it. and It has a method called &lt;code&gt;GetUserService&lt;/code&gt; that returns the other service, So it's the root.&lt;/p&gt;
+
+&lt;p&gt;Notice that we write a dummy implementation of &lt;code&gt;GetUserService&lt;/code&gt; to only return the &lt;code&gt;UserService&lt;/code&gt; when password is nimda. In there we could validate the user with database and try to get the user's id into &lt;code&gt;UserServiceImpl&lt;/code&gt;, So that it can be used to query user's own todo lists. But right now let's say the system only works for the user admin@example.com.&lt;/p&gt;
+
+&lt;p&gt;Next we implement the &lt;code&gt;GetTodoLists&lt;/code&gt;:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;func (u *UserServiceImpl) GetTodoLists() (list []*todoapi.TodoList, err error) {
+    withdb(func(db *sql.DB) {
+    list = make([]*todoapi.TodoList, 0)
+    rows, err := db.Query(&quot;SELECT id, name FROM todo_lists ORDER BY id ASC&quot;)
+    panicIf(err)
+
+    for rows.Next() {
+        newL := new(todoapi.TodoList)
+        var id int
+        err = rows.Scan(&amp;amp;id, &amp;amp;newL.Name)
+        panicIf(err)
+        newL.Id = fmt.Sprintf(&quot;%d&quot;, id)
+        list = append(list, newL)
+    }
+    })
+    return
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;It first query from the postgresql table &lt;code&gt;todo_lists&lt;/code&gt;, and then populate them into the struct &lt;code&gt;todoapi.TodoList&lt;/code&gt;, It's quite straight forward.&lt;/p&gt;
+
+&lt;p&gt;Next thing we do is create a http server to serve the API:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;package main
+
+import (
+    &quot;github.com/hypermusk/todoapp/server/todoapihttpimpl&quot;
+    &quot;log&quot;
+    &quot;net/http&quot;
+)
+
+func main() {
+
+    todoapihttpimpl.AddToMux(&quot;/api&quot;, http.DefaultServeMux)
+    http.DefaultServeMux.Handle(&quot;/web/&quot;, http.FileServer(http.Dir(&quot;../../&quot;)))
+    err := http.ListenAndServe(&quot;:9000&quot;, nil)
+    if err != nil {
+        log.Fatal(&quot;ListenAndServe: &quot;, err)
+    }
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The &lt;code&gt;todoapihttpimpl&lt;/code&gt; package is the glue code that &lt;code&gt;hypermusk&lt;/code&gt; generated. And it has a &lt;code&gt;AddToMux&lt;/code&gt; method that could expose all those APIs through a url like &lt;code&gt;/api/UserService/GetTodoLists.json&lt;/code&gt;&lt;/p&gt;
+
+&lt;p&gt;After this, you start the server with &lt;code&gt;go run main.go&lt;/code&gt;, And if there is no compile errors, You should be able to serve the APIs to your javascript, here is the proof.&lt;/p&gt;
+
+&lt;p&gt; &lt;img src=&quot;/images/todo-lists-app/web_console.png&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;And how the http round trip is if you want to know the internal of how it works:&lt;/p&gt;
+
+&lt;p&gt; &lt;img src=&quot;/images/todo-lists-app/tcpspy.png&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;And the full code of this app is at: &lt;a href=&quot;https://github.com/hypermusk/todoapp&quot;&gt;https://github.com/hypermusk/todoapp&lt;/a&gt;&lt;/p&gt;
+
+&lt;p&gt;Next: &lt;a href=&quot;/2013/09/27/make-an-todo-list-ios-app-with-these-api.html&quot;&gt;Make an iOS app with these API&lt;/a&gt;&lt;/p&gt;
+</content>
+ </entry>
+ 
+ <entry>
+   <title>Make an Todo List iOS app with these API</title>
+   <link href="http://sunfmin.com/2013/09/27/make-an-todo-list-ios-app-with-these-api.html"/>
+   <updated>2013-09-27T00:00:00+08:00</updated>
+   <id>http://sunfmin.com/2013/09/27/make-an-todo-list-ios-app-with-these-api</id>
+   <content type="html">&lt;p&gt;TBD&lt;/p&gt;
+</content>
+ </entry>
+ 
+ 
+</feed>
