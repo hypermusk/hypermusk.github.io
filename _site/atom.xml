@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <feed xmlns="http://www.w3.org/2005/Atom">
- 
- <title>input, process, output</title>
- <link href="http://sunfmin.com/atom.xml" rel="self"/>
- <link href="http://sunfmin.com/"/>
- <updated>2013-09-27T13:24:10+08:00</updated>
- <id>http://sunfmin.com/</id>
+
+ <title>HyperMusk</title>
+ <link href="http://hypermusk.github.io/atom.xml" rel="self"/>
+ <link href="http://hypermusk.github.io/"/>
+ <updated>2013-09-27T13:35:06+08:00</updated>
+ <id>http://hypermusk.github.io/</id>
  <author>
    <name>Felix Sun</name>
    <email>sunfmin@gmail.com</email>
@@ -14,9 +14,9 @@
  
  <entry>
    <title>Todo Lists App</title>
-   <link href="http://sunfmin.com/2013/09/27/todo-lists-app.html"/>
+   <link href="http://hypermusk.github.io/2013/09/27/todo-lists-app.html"/>
    <updated>2013-09-27T00:00:00+08:00</updated>
-   <id>http://sunfmin.com/2013/09/27/todo-lists-app</id>
+   <id>http://hypermusk.github.io/2013/09/27/todo-lists-app</id>
    <content type="html">&lt;p&gt;Here I'll describe the basic requirements of this app.&lt;/p&gt;
 
 &lt;ul&gt;
@@ -217,12 +217,12 @@ func main() {
  
  <entry>
    <title>Make an Todo List iOS app with these API</title>
-   <link href="http://sunfmin.com/2013/09/27/make-an-todo-list-ios-app-with-these-api.html"/>
+   <link href="http://hypermusk.github.io/2013/09/27/make-an-todo-list-ios-app-with-these-api.html"/>
    <updated>2013-09-27T00:00:00+08:00</updated>
-   <id>http://sunfmin.com/2013/09/27/make-an-todo-list-ios-app-with-these-api</id>
+   <id>http://hypermusk.github.io/2013/09/27/make-an-todo-list-ios-app-with-these-api</id>
    <content type="html">&lt;p&gt;TBD&lt;/p&gt;
 </content>
  </entry>
  
- 
+
 </feed>
