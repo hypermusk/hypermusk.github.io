@@ -190,6 +190,6 @@ And how the http round trip is if you want to know the internal of how it works:
 And the full code of this app is at: <a href="https://github.com/hypermusk/todoapp">https://github.com/hypermusk/todoapp</a>
 
 
-Next: [Make an iOS app with these API](/2013/09/27/make-an-todo-list-ios-app-with-these-api.html)
+Next: [Make the Todo List Web app with these API and Angularjs](/2013/09/27/make-an-todo-list-web-app-with-these-api-and-angularjs.html)
 
 
